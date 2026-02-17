@@ -1,0 +1,106 @@
+users/{uid}
+   phoneNumber
+   shopName
+   language
+   subscription
+   createdAt
+
+
+products/{productId}
+   userId
+   name
+   unit                // kg, bag, box, piece, litre, etc
+   costPrice
+   sellingPrice
+   stockQuantity
+   stockValue        // optional cache
+   createdAt
+   updatedAt
+
+
+parties/{partyId}
+   userId
+   name
+   phone
+   type              // "customer" | "supplier"
+   balance           // positive = they owe you
+   createdAt
+
+
+purchases/{purchaseId}
+   userId
+   supplierId
+   items: [
+      {
+         productId
+         quantity
+         costPrice
+         total
+      }
+   ]
+   totalAmount
+   createdAt
+
+sales/{saleId}
+   userId
+   customerId
+   items: [
+      {
+         productId
+         quantity
+         sellingPrice
+         total
+      }
+   ]
+   totalAmount
+   paymentType   // "cash" | "credit"
+   createdAt
+
+
+If paymentType = credit:
+
+Update party:
+
+balance += totalAmount
+
+
+
+If customer pays later:
+
+Create:
+payments/{paymentId}
+   userId
+   partyId
+   amount
+   type // received | paid
+   createdAt
+
+
+Phase 1 Screens (Clean Structure)
+Dashboard
+Products
+   - Add Product
+Purchases
+   - Add Purchase
+Sales
+   - Add Sale
+Parties
+   - Add Customer
+   - Add Supplier
+Reports
+   - Sales Report
+   - Purchase Report
+   - Party Report
+   - Stock Report
+   - Profit Report
+   - Loss Report
+   - Custom Date Range Report
+   - Settings
+
+
+
+Before adding sale:
+
+if (user.subscription.status !== 'active') {
+   throw new Error("Subscription expired");
+}
