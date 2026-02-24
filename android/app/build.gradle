@@ -5,7 +5,7 @@ apply plugin: 'com.google.gms.google-services'
 // project.ext.vectoricons = [
 //     iconFontNames: ['Ionicons.ttf']
 // ]
-// apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -47,6 +47,10 @@ react {
     //   A list of extra flags to pass to the 'bundle' commands.
     //   See https://github.com/react-native-community/cli/blob/main/docs/commands.md#bundle
     // extraPackagerArgs = []
+
+    if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+        hermesCommand = "$rootDir/hermesc.cmd"
+    }
 
     /* Hermes Commands */
     //   The hermes compiler command to run. By default it is 'hermesc'
