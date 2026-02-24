@@ -104,3 +104,8 @@ Before adding sale:
 if (user.subscription.status !== 'active') {
    throw new Error("Subscription expired");
 }
+
+
+installing npm install npm install hermes-compiler@250829098.0.1 --save-dev will fix the issue Release builds fail due to missing hermesc bin on Windows
+
+this will help to fix app startup faile issue - https://github.com/facebook/react-native/issues/55538
