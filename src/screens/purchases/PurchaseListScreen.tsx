@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import { formatCurrency } from '../../utils/format';
+import { formatCurrency, formatDate } from '../../utils/format';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../../constants/theme';
 
@@ -46,23 +46,28 @@ export default function PurchaseListScreen({ navigation }: any) {
 
   return (
     <View style={{ flex: 1 }}>
-      <FlatList
-        data={purchases}
-        keyExtractor={item => item.id}
-        contentContainerStyle={{ padding: 16 }}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
+      {purchases.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text>No purchases available</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={purchases}
+          keyExtractor={item => item.id}
+          contentContainerStyle={{ padding: 16 }}
+          renderItem={({ item }) => (
+            <View style={styles.card}>
             <Text style={styles.amount}>
               {formatCurrency(item.totalAmount)}
             </Text>
             <Text>
-              {new Date(item.createdAt).toLocaleDateString()}
+              {formatDate(item.createdAt)}
             </Text>
             <Text>Payment: {item.paymentType}</Text>
           </View>
         )}
       />
-
+      )}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('AddPurchase')}

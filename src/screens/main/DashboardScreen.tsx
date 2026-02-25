@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,277 +7,320 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import auth from '@react-native-firebase/auth';
+import { useFocusEffect } from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { LineChart } from 'react-native-gifted-charts';
+import DashboardSkeleton from '../../components/skeleton/DashboardSkeleton';
+import { Card } from '../../components/common/Card';
 import { getDashboardData, getWeeklySales } from '../../services/dashboardService';
 import { formatCurrency } from '../../utils/format';
-import { colors } from '../../constants/theme';
-// import { BarChart, Grid, XAxis } from 'react-native-svg-charts';
-import { useFocusEffect } from '@react-navigation/native';
-import DashboardSkeleton from '../../components/skeleton/DashboardSkeleton';
-
+import { colors } from '../../theme/colors';
 
 export default function DashboardScreen({ navigation }: any) {
-  const [data, setData] = useState<any>(null);
-const [refreshing, setRefreshing] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(null);
   const [weeklyData, setWeeklyData] = useState<any>(null);
-  const [loadingSummary, setLoadingSummary] = useState(true);
-  const [loadingChart, setLoadingChart] = useState(true);
 
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const user = auth().currentUser;
-  const displayName = user?.displayName || 'User';
+  /* ---------- Initial Load ---------- */
+
+  useEffect(() => {
+    loadAll(true);
+  }, []);
+
+  /* ---------- Refresh On Focus (NO skeleton flash) ---------- */
 
   useFocusEffect(
     useCallback(() => {
-      loadSummary();
-      return () => { };
-    }, [])
+      if (!initialLoading) {
+        loadAll(false);
+      }
+    }, [initialLoading])
   );
 
-  const loadSummary = async () => {
-    setLoadingSummary(true);
+  const loadAll = async (isInitial = false) => {
+    if (isInitial) setInitialLoading(true);
 
-    const result = await getDashboardData();
-    setSummaryData(result);
+    const [summary, weekly] = await Promise.all([
+      getDashboardData(),
+      getWeeklySales(),
+    ]);
 
-    setLoadingSummary(false);
-
-    // Lazy load chart AFTER summary renders
-    setTimeout(() => {
-      loadWeekly();
-    }, 300);
-  };
-
-  const loadWeekly = async () => {
-    setLoadingChart(true);
-
-    const weekly = await getWeeklySales();
+    setSummaryData(summary);
     setWeeklyData(weekly);
 
-    setLoadingChart(false);
+    if (isInitial) setInitialLoading(false);
   };
 
-const onRefresh = async () => {
-  setRefreshing(true);
-  await loadSummary();   // your fetch function
-  setRefreshing(false);
-};
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadAll(false);
+    setRefreshing(false);
+  };
 
+  const hasWeeklyActivity = useMemo(() => {
+    return weeklyData?.values?.some((v: number) => v > 0);
+  }, [weeklyData]);
 
-  /*   useEffect(() => {
-      loadData();
-    }, []);
-  
-    const loadData = async () => {
-      const result = await getDashboardData();
-      setData(result);
-      const weeklyResult = await getWeeklySales();
-      setWeeklyData(weeklyResult);
-    }; */
-
-  // if (!data) return null;
-
-if (loadingSummary) {
-  return <DashboardSkeleton />;
-}
-
+  if (initialLoading || !summaryData) {
+    return <DashboardSkeleton />;
+  }
 
   return (
-    <ScrollView style={styles.container} refreshControl={
-    <RefreshControl
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      colors={['#1e88e5']}
-    />
-  }>
-      {/* Greeting */}
-      <Text style={styles.greeting}>
-        Hi {displayName} 👋
-      </Text>
-
-      {/* Today Overview */}
-      <Text style={styles.sectionTitle}>Today</Text>
-      <View style={styles.row}>
-        <Card
-          title="Sales"
-          value={formatCurrency(summaryData.todaySales)}
-          color={colors.success}
-        />
-        <Card
-          title="Purchases"
-          value={formatCurrency(summaryData.todayPurchases)}
-          color={colors.danger}
-        />
-      </View>
-
-      {/* Credit Summary */}
-      <Text style={styles.sectionTitle}>Credit Summary</Text>
-      <View style={styles.row}>
-        <Card
-          title="Receivables"
-          value={formatCurrency(summaryData.receivables)}
-          color={colors.success}
-        />
-        <Card
-          title="Payables"
-          value={formatCurrency(summaryData.payables)}
-          color={colors.danger}
-        />
-      </View>
-
-      {/* <Text style={styles.sectionTitle}>Last 7 Days Sales</Text>
-
-      {loadingChart ? (
-        <View style={{ height: 150, justifyContent: 'center', alignItems: 'center' }}>
-          <Text>Loading chart...</Text>
-        </View>
-      ) : (
-        weeklyData && (
-          <View style={styles.chartContainer}>
-            <BarChart
-              data={weeklyData.values.map((value: number, index: number) => ({
-                value,
-                label: weeklyData.labels[index].slice(0, 3),
-              }))}
-              barWidth={22}
-              spacing={20}
-              roundedTop
-              frontColor={colors.primary}
-              yAxisThickness={0}
-              xAxisThickness={0}
-              hideRules
-            />
-          </View>
-        )
-      )} */}
-
-      {/* {weeklyData && (
-        <View style={{ height: 200, marginVertical: 10 }}>
-          <View style={styles.chartContainer}>
-          <BarChart
-            style={{ flex: 1 }}
-            data={weeklyData.values}
-            svg={{ fill: colors.primary }}
-            contentInset={{ top: 10, bottom: 10 }}
-            spacingInner={0.3}
-          >
-            <Grid />
-          </BarChart>
-          </View>
-
-          <View style={styles.chartContainer}>
-          <XAxis
-            style={{ marginTop: 10 }}
-            data={weeklyData.values}
-            formatLabel={(value, index) =>
-              weeklyData.labels[index].slice(0, 5)
-            }
-            contentInset={{ left: 20, right: 20 }}
-            svg={{ fontSize: 10, fill: '#666' }}
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
           />
-          </View>
+        }
+      >
+        {/* Today Overview */}
+        <View style={styles.cardRow}>
+          <Card style={styles.flexCard}>
+            {summaryData.todaySales > 0 ? (
+              <>
+                <View style={styles.row}>
+                  <View
+                    style={[styles.dot, { backgroundColor: colors.success }]}
+                  />
+                  <Text style={styles.cardLabel}>Sales</Text>
+                </View>
+
+                <Text style={styles.amount}>
+                  {formatCurrency(summaryData.todaySales)}
+                </Text>
+              </>
+            ) : (
+              <View style={styles.emptyCardContainer}>
+                <Ionicons
+                  name="cart-outline"
+                  size={24}
+                  color={colors.textSecondary}
+                />
+                <Text style={styles.emptyTitle}>
+                  No Sales Today
+                </Text>
+                <TouchableOpacity
+                  style={styles.inlinePrimaryButton}
+                  onPress={() => navigation.navigate('Sales')}
+                >
+                  <Text style={styles.inlinePrimaryText}>
+                    Add Sale
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </Card>
+
+          <Card style={styles.flexCard}>
+            <View style={styles.row}>
+              <View style={[styles.dot, { backgroundColor: colors.danger }]} />
+              <Text style={styles.cardLabel}>Purchases</Text>
+            </View>
+            <Text
+              style={styles.amount}
+              numberOfLines={1}
+              adjustsFontSizeToFit>
+              {formatCurrency(summaryData.todayPurchases)}
+            </Text>
+          </Card>
         </View>
-      )} */}
 
-      {/* Stock Value */}
-      <Text style={styles.sectionTitle}>Inventory</Text>
-      <View style={styles.fullCard}>
-        <Text style={styles.cardTitle}>Stock Value</Text>
-        <Text style={styles.cardValue}>
-          {formatCurrency(summaryData.stockValue)}
-        </Text>
-      </View>
+        {/* Credit Summary */}
+        <Text style={styles.sectionTitle}>Credit Summary</Text>
 
-      {/* Quick Actions */}
-      <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.cardRow}>
+          <Card style={styles.flexCard}>
+            <View style={styles.row}>
+              <View style={[styles.dot, { backgroundColor: colors.success }]} />
+              <Text style={styles.cardLabel}>Receivables</Text>
+            </View>
+            <Text style={styles.amount} adjustsFontSizeToFit numberOfLines={1}>
+              {formatCurrency(summaryData.receivables)}
+            </Text>
+          </Card>
 
+          <Card style={styles.flexCard}>
+            <View style={styles.row}>
+              <View style={[styles.dot, { backgroundColor: colors.danger }]} />
+              <Text style={styles.cardLabel}>Payables</Text>
+            </View>
+            <Text style={styles.amount}
+              numberOfLines={1}
+              adjustsFontSizeToFit>
+              {formatCurrency(summaryData.payables)}
+            </Text>
+          </Card>
+        </View>
+
+        {/* Weekly Mini Chart */}
+        <Text style={styles.sectionTitle}>Last 7 Days Sales</Text>
+
+        <Card style={styles.weeklyCard}>
+          {hasWeeklyActivity ? (
+            <LineChart
+              data={weeklyData.values.map((v: number) => ({ value: v }))}
+              thickness={2}
+              color={colors.primary}
+              hideDataPoints
+              hideYAxisText
+              hideRules
+              xAxisColor="transparent"
+              yAxisColor="transparent"
+              areaChart
+              startFillColor={colors.primary}
+              endFillColor="#FFFFFF"
+              startOpacity={0.15}
+              endOpacity={0}
+            />
+          ) : (
+            <View style={styles.weeklyEmptyContainer}>
+              <Ionicons
+                name="analytics-outline"
+                size={28}
+                color={colors.textSecondary}
+              />
+              <Text style={styles.emptyTitle}>
+                No activity yet
+              </Text>
+              <Text style={styles.emptySub}>
+                Sales data will appear here once you start billing.
+              </Text>
+            </View>
+          )}
+        </Card>
+
+        {/* Inventory */}
+        <Text style={styles.sectionTitle}>Inventory</Text>
+
+        <Card style={{ paddingVertical: 24, marginHorizontal: 20 }}>
+          <Text style={styles.cardLabel}>Stock Value</Text>
+          <Text style={styles.amount}>
+            {formatCurrency(summaryData.stockValue)}
+          </Text>
+        </Card>
+      </ScrollView>
+
+      {/* Floating Action Button */}
       <TouchableOpacity
-        style={styles.actionButton}
+        style={styles.fab}
         onPress={() => navigation.navigate('Purchases')}
       >
-        <Text style={styles.actionText}>Add Purchase</Text>
+        <Ionicons name="add" size={26} color="#fff" />
       </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.actionButton, { marginBottom: 40 }]}
-        onPress={() => navigation.navigate('Parties')}
-      >
-        <Text style={styles.actionText}>Add Customer / Supplier</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 }
 
-/* ---------- Card Component ---------- */
-
-const Card = ({ title, value, color }: any) => (
-  <View style={[styles.card, { borderLeftColor: color }]}>
-    <Text style={styles.cardTitle}>{title}</Text>
-    <Text style={[styles.cardValue, { color }]}>{value}</Text>
-  </View>
-);
-
-/* ---------- Styles ---------- */
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: 16,
-  },
-  greeting: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: 20,
-  },
   sectionTitle: {
-    fontWeight: 'bold',
-    marginBottom: 10,
-    marginTop: 20,
+    marginTop: 28,
+    marginBottom: 14,
+    paddingHorizontal: 20,
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    letterSpacing: 0.3,
   },
+
+  amount: {
+    marginTop: 8,
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+
+  cardLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+
+  cardRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    gap: 14,
+  },
+
+  weeklyCard: {
+    marginHorizontal: 20,
+    paddingVertical: 24,
+  },
+
+  weeklyEmptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
+
+  emptyTitle: {
+    marginTop: 12,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+
+  emptySub: {
+    marginTop: 4,
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: 24,
+  },
+
+  flexCard: {
+    flex: 1,
+  },
+
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  card: {
-    backgroundColor: colors.card,
-    padding: 16,
-    borderRadius: 12,
-    width: '48%',
-    borderLeftWidth: 5,
-    elevation: 3,
+
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
   },
-  fullCard: {
-    backgroundColor: colors.card,
-    padding: 20,
-    borderRadius: 12,
-    elevation: 3,
-  },
-  cardTitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-  cardValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 5,
-  },
-  actionButton: {
+
+  fab: {
+    position: 'absolute',
+    bottom: 25,
+    right: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: colors.primary,
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
   },
-  actionText: {
-    color: '#fff',
-    fontWeight: '600',
-    textAlign: 'center',
+  emptyChartContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  chartContainer: {
-    backgroundColor: colors.card,
+  emptyCardContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  inlinePrimaryButton: {
+    marginTop: 16,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 12,
-    padding: 10,
-    elevation: 3,
+  },
+
+  inlinePrimaryText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

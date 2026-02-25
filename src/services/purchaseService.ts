@@ -31,7 +31,7 @@ export const addPurchase = async (
 
       transaction.update(productRef, {
         stockQuantity: currentStock + item.quantity,
-        updatedAt: Date.now(),
+        updatedAt: firestore.FieldValue.serverTimestamp(),
       });
     }
 
@@ -44,7 +44,7 @@ export const addPurchase = async (
       items,
       totalAmount,
       paymentType,
-      createdAt: Date.now(),
+      createdAt: firestore.FieldValue.serverTimestamp(),
     });
 
     // If credit → update supplier balance

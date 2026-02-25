@@ -12,31 +12,64 @@ export const getDashboardData = async () => {
 
   const todayTimestamp = todayStart.getTime();
 
-  // 1️⃣ Today Sales
+  const now = new Date();
+  const startOfDay = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    0, 0, 0
+  );
+
+  const endOfDay = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23, 59, 59
+  );
+
+  // Today Sales
   const salesSnapshot = await db
     .collection('sales')
     .where('userId', '==', user.uid)
-    .where('createdAt', '>=', todayTimestamp)
+    .where('status', '==', 'paid')
+    .where('createdAt', '>=', firestore.Timestamp.fromDate(startOfDay))
+    .where('createdAt', '<=', firestore.Timestamp.fromDate(endOfDay))
     .get();
 
-  const todaySales = salesSnapshot.docs.reduce(
-    (sum, doc) => sum + doc.data().totalAmount,
-    0
-  );
+  let todaySales = 0;
+  let todayCollection = 0;
+  salesSnapshot.forEach(doc => {
+    const data = doc.data();
+    todaySales += data.grandTotal || 0;
+    todayCollection += data.amountPaid || 0;
+  });
 
-  // 2️⃣ Today Purchases
-  const purchaseSnapshot = await db
+  // Today Purchases
+  const purchaseSnapshot = await firestore()
     .collection('purchases')
     .where('userId', '==', user.uid)
-    .where('createdAt', '>=', todayTimestamp)
+    .where(
+      'createdAt',
+      '>=',
+      firestore.Timestamp.fromDate(startOfDay)
+    )
+    .where(
+      'createdAt',
+      '<=',
+      firestore.Timestamp.fromDate(endOfDay)
+    )
     .get();
 
-  const todayPurchases = purchaseSnapshot.docs.reduce(
-    (sum, doc) => sum + doc.data().totalAmount,
-    0
-  );
+  let todayPurchases = 0;
+  let todayPurchasePayments = 0;
 
-  // 3️⃣ Parties
+  purchaseSnapshot.forEach(doc => {
+    const data = doc.data();
+    todayPurchases += data.totalAmount || 0;
+    todayPurchasePayments += data.totalAmount || 0;
+  });
+
+  // Parties
   const partiesSnapshot = await db
     .collection('parties')
     .where('userId', '==', user.uid)
@@ -55,7 +88,7 @@ export const getDashboardData = async () => {
     }
   });
 
-  // 4️⃣ Stock Value
+  // Stock Value
   const productsSnapshot = await db
     .collection('products')
     .where('userId', '==', user.uid)
