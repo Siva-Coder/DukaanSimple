@@ -207,12 +207,12 @@ export default function DashboardScreen({ navigation }: any) {
       </ScrollView>
 
       {/* Floating Action Button */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('Purchases')}
       >
         <Ionicons name="add" size={26} color="#fff" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }

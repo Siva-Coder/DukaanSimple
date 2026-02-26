@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,54 +10,66 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
-
+import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import DashboardScreen from '../screens/main/DashboardScreen';
 import PartiesStack from './PartiesStack';
+import MoreStack from './MoreStack';
+import AppBottomSheet from '../components/common/AppBottomSheet';
 
-import QuickAddSheet from '../components/sheets/QuickAddSheet';
+import { useTheme } from '../theme/themeContext';
 import { colors } from '../theme/colors';
 import { getGreeting } from '../utils/greeting';
-import MoreStack from './MoreStack';
 
 const Tab = createBottomTabNavigator();
 
+const EmptyScreen = () => null;
+
 export default function MainTabs() {
   const navigation = useNavigation<any>();
-  const [quickVisible, setQuickVisible] = useState(false);
+  const quickSheetRef = useRef<BottomSheetModal>(null);
+  const billsSheetRef = useRef<BottomSheetModal>(null);
+  const { theme } = useTheme();
 
-  const openQuickAdd = useCallback(() => {
-    setQuickVisible(true);
+  const openQuickSheet = useCallback(() => {
+    console.log(quickSheetRef.current);
+
+    quickSheetRef.current?.present();
   }, []);
 
-  const closeQuickAdd = useCallback(() => {
-    setQuickVisible(false);
+  const openBillsSheet = useCallback(() => {
+    billsSheetRef.current?.present();
   }, []);
 
-  const handleQuickNavigate = useCallback(
+  const handleNavigate = useCallback(
     (route: string) => {
-      navigation.navigate(route);
+      quickSheetRef.current?.close();
+      billsSheetRef.current?.close();
+      setTimeout(() => navigation.navigate(route), 250);
     },
     [navigation]
   );
-
-  const handleBillsPress = useCallback(() => {
-    navigation.navigate('BillsSheet'); // implement later
-  }, [navigation]);
 
   return (
     <>
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
-          tabBarStyle: styles.tabBar,
-          tabBarLabelStyle: styles.tabLabel,
-          tabBarActiveTintColor: colors.primary,
-          tabBarInactiveTintColor: colors.tabInactive,
-
-          tabBarItemStyle: styles.tabItem,
+          tabBarStyle: {
+            height: 64,
+            backgroundColor: theme.card,
+            borderTopColor: theme.border,
+            borderTopWidth: 1,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '500',
+            marginBottom: 4,
+          },
+          tabBarActiveTintColor: theme.primary,
+          tabBarInactiveTintColor: theme.tabInactive,
 
           tabBarIcon: ({ focused, color }) => {
-            let iconName: string = '';
+            let iconName = '';
 
             switch (route.name) {
               case 'Dashboard':
@@ -74,7 +86,22 @@ export default function MainTabs() {
                 break;
             }
 
-            return <Ionicons name={iconName} size={22} color={color} />;
+            return (
+              <View style={{ alignItems: 'center' }}>
+                {focused && (
+                  <View
+                    style={{
+                      height: 3,
+                      width: 55,
+                      backgroundColor: theme.primary,
+                      borderRadius: 2,
+                      marginBottom: 6,
+                    }}
+                  />
+                )}
+                <Ionicons name={iconName} size={22} color={color} />
+              </View>
+            );
           },
         })}
       >
@@ -84,58 +111,53 @@ export default function MainTabs() {
           component={DashboardScreen}
           options={({ navigation }) => ({
             headerShown: true,
-            headerShadowVisible: false,
             header: () => <DashboardHeader navigation={navigation} />,
-            tabBarItemStyle: styles.activeBorder,
           })}
         />
 
-        {/* BILLS (Action Only) */}
+        {/* BILLS */}
         <Tab.Screen
           name="Bills"
           component={View}
           listeners={{
             tabPress: e => {
               e.preventDefault();
-              handleBillsPress();
+              openBillsSheet();
             },
           }}
         />
 
-        {/* CENTER FAB */}
+        {/* QUICK ADD FAB */}
         <Tab.Screen
-          name="QuickAdd"
-          component={View}
+          name="Quick"
+          component={EmptyScreen}
           options={{
-            tabBarLabel: '',
+            headerShown: false,
+            tabBarLabel: () => null,
             tabBarIcon: () => (
-              <View style={styles.fabButton}>
+              <View style={[styles.fabButton, { backgroundColor: theme.primary }]}>
                 <Ionicons name="add" size={24} color="#fff" />
               </View>
             ),
             tabBarButton: props => (
-              <TouchableOpacity
-                {...props}
-                activeOpacity={0.85}
-                onPress={openQuickAdd}
-              />
+              <TouchableOpacity {...props} onPress={openQuickSheet} />
             ),
           }}
         />
 
-        {/* PARTIES */}
         <Tab.Screen name="Parties" component={PartiesStack} />
-
-        {/* MORE */}
         <Tab.Screen name="More" component={MoreStack} />
       </Tab.Navigator>
 
-      {/* QUICK ADD SHEET */}
-      <QuickAddSheet
-        visible={quickVisible}
-        onClose={closeQuickAdd}
-        onNavigate={handleQuickNavigate}
-      />
+      {/* QUICK CREATE SHEET */}
+        <AppBottomSheet ref={quickSheetRef} snap="35%">
+          <QuickGrid onNavigate={handleNavigate} />
+        </AppBottomSheet>
+
+      {/* BILLS SHEET */}
+        <AppBottomSheet ref={billsSheetRef} snap="40%">
+          <BillsGrid onNavigate={handleNavigate} />
+        </AppBottomSheet>
     </>
   );
 }
@@ -144,11 +166,12 @@ export default function MainTabs() {
 
 const DashboardHeader = React.memo(({ navigation }: any) => {
   const greeting = getGreeting();
+  const { theme } = useTheme();
   const user = auth().currentUser;
-  const displayName = user?.displayName || 'User';
+  const displayName = user?.displayName || 'My Business';
 
   return (
-    <SafeAreaView edges={['top']} style={{ backgroundColor: colors.background }}>
+    <SafeAreaView edges={['top']} style={{ backgroundColor: theme.background }}>
       <View style={styles.headerContainer}>
         <View>
           <Text style={styles.headerTitle}>
@@ -162,12 +185,58 @@ const DashboardHeader = React.memo(({ navigation }: any) => {
         <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
           <Ionicons
             name="settings-outline"
-            size={22}
-            color={colors.textSecondary}
+            size={26}
+            color={theme.textSecondary}
           />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+  );
+});
+
+/* ---------------- QUICK GRID ---------------- */
+
+const QuickGrid = React.memo(({ onNavigate }: any) => {
+  const { theme } = useTheme();
+
+  return (
+    <BottomSheetView style={styles.sheetContainer}>
+      <Text style={styles.sheetTitle}>Quick Create</Text>
+      <View style={styles.grid}>
+        <SheetItem icon="receipt-outline" label="Sale" onPress={() => onNavigate('CreateSale')} />
+        <SheetItem icon="cart-outline" label="Purchase" onPress={() => onNavigate('CreatePurchase')} />
+        <SheetItem icon="person-add-outline" label="Customer" onPress={() => onNavigate('AddCustomer')} />
+        <SheetItem icon="business-outline" label="Supplier" onPress={() => onNavigate('AddSupplier')} />
+        <SheetItem icon="cube-outline" label="Product" onPress={() => onNavigate('AddProduct')} />
+      </View>
+    </BottomSheetView>
+  );
+});
+
+/* ---------------- BILLS GRID ---------------- */
+
+const BillsGrid = React.memo(({ onNavigate }: any) => {
+  return (
+    <BottomSheetView style={styles.sheetContainer}>
+      <Text style={styles.sheetTitle}>Transactions</Text>
+      <View style={styles.grid}>
+        <SheetItem icon="receipt-outline" label="Sales" onPress={() => onNavigate('SalesList')} />
+        <SheetItem icon="cart-outline" label="Purchases" onPress={() => onNavigate('PurchasesList')} />
+        <SheetItem icon="arrow-down-outline" label="Payment In" onPress={() => onNavigate('PaymentIn')} />
+        <SheetItem icon="arrow-up-outline" label="Payment Out" onPress={() => onNavigate('PaymentOut')} />
+      </View>
+    </BottomSheetView>
+  );
+});
+
+const SheetItem = React.memo(({ icon, label, onPress }: any) => {
+  const { theme } = useTheme();
+
+  return (
+    <TouchableOpacity style={styles.item} onPress={onPress}>
+      <Ionicons name={icon} size={20} color={theme.primary} />
+      <Text style={styles.label}>{label}</Text>
+    </TouchableOpacity>
   );
 });
 
@@ -188,15 +257,10 @@ const styles = StyleSheet.create({
   tabItem: {
     paddingTop: 6,
   },
-  activeBorder: {
-    borderTopWidth: 3,
-    borderTopColor: colors.primary,
-  },
   fabButton: {
     width: 48,
     height: 48,
-    borderRadius: 14, // square feel (not fully round)
-    backgroundColor: colors.primary,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 18,
@@ -211,7 +275,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '600',
     color: colors.textPrimary,
   },
@@ -219,5 +283,32 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  sheetContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  sheetTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  item: {
+    width: '47%',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  label: {
+    marginTop: 6,
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
