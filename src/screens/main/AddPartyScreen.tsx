@@ -21,8 +21,12 @@ export default function AddPartyScreen({ navigation, route }: any) {
   const [alternatePhone, setAlternatePhone] = useState('');
 
   const handleSave = async () => {
-    if (!name) {
-      Alert.alert('Enter name');
+    if (type === 'customer' && !name) {
+      Alert.alert('Enter customer name');
+      return;
+    }
+    if (type === 'supplier' && !firmName) {
+      Alert.alert('Enter business name');
       return;
     }
 
@@ -31,14 +35,14 @@ export default function AddPartyScreen({ navigation, route }: any) {
         name,
         phone,
         type,
-        firmName: type === 'supplier' ? firmName : undefined,
-        ownerName: type === 'supplier' ? ownerName : undefined,
-        address: type === 'supplier' ? address : undefined,
-        alternatePhone: type === 'supplier' ? alternatePhone : undefined,
+        firmName: type === 'supplier' ? firmName : '',
+        ownerName: type === 'supplier' ? ownerName : '',
+        address: type === 'supplier' ? address : '',
+        alternatePhone: type === 'supplier' ? alternatePhone : '',
       });
       navigation.goBack();
-    } catch {
-      Alert.alert('Failed to add');
+    } catch (error) {
+      Alert.alert(`${error}`);
     }
   };
 
@@ -48,7 +52,7 @@ export default function AddPartyScreen({ navigation, route }: any) {
         <>
           <TextInput
             placeholderTextColor="#888"
-            placeholder="Name"
+            placeholder="Customer Name"
             value={name}
             onChangeText={setName}
             style={styles.input}
@@ -69,7 +73,7 @@ export default function AddPartyScreen({ navigation, route }: any) {
         <>
           <TextInput
             placeholderTextColor="#888"
-            placeholder="Firm Name"
+            placeholder="Business Name"
             value={firmName}
             onChangeText={setFirmName}
             style={styles.input}

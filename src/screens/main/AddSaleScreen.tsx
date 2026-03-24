@@ -204,53 +204,53 @@ export default function AddSaleScreen() {
         <Text style={styles.label}>Items</Text>
 
         {items.map((item, index) => (
-  <View key={index} style={styles.itemCard}>
-    
-    {/* Left Info */}
-    <View style={{ flex: 1 }}>
-      <Text style={styles.itemTitle}>{item.productName}</Text>
-      <Text style={styles.itemSub}>Stock: {item.availableStock}</Text>
-    </View>
+          <View key={index} style={styles.itemCard}>
 
-    {/* Quantity Controller */}
-    <View style={styles.qtyControl}>
-      <TouchableOpacity
-        onPress={() =>
-          updateItem(index, 'quantity', String(item.quantity - 1))
-        }
-      >
-        <Ionicons name="remove" size={16} />
-      </TouchableOpacity>
+            {/* Left Info */}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.itemTitle}>{item.productName}</Text>
+              <Text style={styles.itemSub}>Stock: {item.availableStock}</Text>
+            </View>
 
-      <Text style={styles.qtyText}>{item.quantity}</Text>
+            {/* Quantity Controller */}
+            <View style={styles.qtyControl}>
+              <TouchableOpacity
+                onPress={() =>
+                  updateItem(index, 'quantity', String(item.quantity - 1))
+                }
+              >
+                <Ionicons name="remove" size={16} />
+              </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={() =>
-          updateItem(index, 'quantity', String(item.quantity + 1))
-        }
-      >
-        <Ionicons name="add" size={16} />
-      </TouchableOpacity>
-    </View>
+              <Text style={styles.qtyText}>{item.quantity}</Text>
 
-    {/* Total */}
-    <Text style={styles.itemAmount}>₹{item.total}</Text>
+              <TouchableOpacity
+                onPress={() =>
+                  updateItem(index, 'quantity', String(item.quantity + 1))
+                }
+              >
+                <Ionicons name="add" size={16} />
+              </TouchableOpacity>
+            </View>
 
-    {/* Delete */}
-    <TouchableOpacity onPress={() => removeItem(index)}>
-      <Ionicons name="trash-outline" size={20} color={colors.danger} />
-    </TouchableOpacity>
+            {/* Total */}
+            <Text style={styles.itemAmount}>₹{item.total}</Text>
 
-  </View>
-))}
+            {/* Delete */}
+            <TouchableOpacity onPress={() => removeItem(index)}>
+              <Ionicons name="trash-outline" size={20} color={colors.danger} />
+            </TouchableOpacity>
+
+          </View>
+        ))}
 
         <TouchableOpacity
-  style={styles.addItemButton}
-  onPress={() => setShowProductSheet(true)}
->
-  <Ionicons name="add-circle-outline" size={18} color="#fff" />
-  <Text style={styles.addItemText}> Add Item</Text>
-</TouchableOpacity>
+          style={styles.addItemButton}
+          onPress={() => setShowProductSheet(true)}
+        >
+          <Ionicons name="add-circle-outline" size={18} color="#fff" />
+          <Text style={styles.addItemText}> Add Item</Text>
+        </TouchableOpacity>
 
         {/* SUMMARY */}
         <View style={styles.summary}>
@@ -293,12 +293,12 @@ export default function AddSaleScreen() {
         </View>
 
         <TouchableOpacity
-  onPress={() => setAmountPaid(String(totalAfterTax))}
->
-  <Text style={{ color: colors.primary }}>
-    Mark as Fully Paid
-  </Text>
-</TouchableOpacity>
+          onPress={() => setAmountPaid(String(totalAfterTax))}
+        >
+          <Text style={{ color: colors.primary }}>
+            Mark as Fully Paid
+          </Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.primaryButton} onPress={handleSave}>
           <Text style={{ color: '#fff', fontWeight: '600' }}>
@@ -310,15 +310,15 @@ export default function AddSaleScreen() {
       {/* ---------------- CUSTOMER SHEET ---------------- */}
       <BottomSheet visible={showCustomerSheet} onClose={() => setShowCustomerSheet(false)}>
         <View style={styles.searchContainer}>
-  <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
-  <TextInput
-    placeholder="Search customer"
-    placeholderTextColor={colors.textSecondary}
-    style={styles.searchInput}
-    value={customerSearch}
-    onChangeText={setCustomerSearch}
-  />
-</View>
+          <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
+          <TextInput
+            placeholder="Search customer"
+            placeholderTextColor={colors.textSecondary}
+            style={styles.searchInput}
+            value={customerSearch}
+            onChangeText={setCustomerSearch}
+          />
+        </View>
 
         <FlatList
           data={filteredCustomers}
@@ -493,20 +493,20 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
   },
   searchContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  borderWidth: 1,
-  borderColor: colors.border,
-  borderRadius: 12,
-  paddingHorizontal: 10,
-  marginBottom: 15,
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+  },
 
-searchInput: {
-  flex: 1,
-  padding: 10,
-  color: colors.textPrimary,
-},
+  searchInput: {
+    flex: 1,
+    padding: 10,
+    color: colors.textPrimary,
+  },
   customerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -528,58 +528,58 @@ searchInput: {
     paddingVertical: 14,
   },
   itemCard: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: colors.card,
-  padding: 14,
-  borderRadius: 16,
-  marginBottom: 12,
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    padding: 14,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
 
-itemTitle: {
-  fontSize: 15,
-  fontWeight: '600',
-  color: colors.textPrimary,
-},
+  itemTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
 
-itemSub: {
-  fontSize: 12,
-  color: colors.textSecondary,
-  marginTop: 2,
-},
+  itemSub: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
 
-qtyControl: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: '#F1F5F9',
-  paddingHorizontal: 10,
-  paddingVertical: 6,
-  borderRadius: 10,
-  marginHorizontal: 12,
-},
+  qtyControl: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    marginHorizontal: 12,
+  },
 
-qtyText: {
-  marginHorizontal: 10,
-  fontWeight: '600',
-},
+  qtyText: {
+    marginHorizontal: 10,
+    fontWeight: '600',
+  },
 
-itemAmount: {
-  fontWeight: '700',
-  width: 70,
-  textAlign: 'right',
-},
-addItemButton: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  backgroundColor: colors.primary,
-  padding: 12,
-  borderRadius: 14,
-  marginTop: 8,
-},
+  itemAmount: {
+    fontWeight: '700',
+    width: 70,
+    textAlign: 'right',
+  },
+  addItemButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    padding: 12,
+    borderRadius: 14,
+    marginTop: 8,
+  },
 
-addItemText: {
-  color: '#fff',
-  fontWeight: '600',
-},
+  addItemText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
 });

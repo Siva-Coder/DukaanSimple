@@ -76,3 +76,5 @@ yarn-error.log
 package-lock.json
 android/app/src/main/assets/index.android.bundle
 android/app/google-services.json
+/android/app/src/main/res
+/.bundle

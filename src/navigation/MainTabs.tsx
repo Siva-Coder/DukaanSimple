@@ -19,6 +19,7 @@ import AppBottomSheet from '../components/common/AppBottomSheet';
 import { useTheme } from '../theme/themeContext';
 import { colors } from '../theme/colors';
 import { getGreeting } from '../utils/greeting';
+import BillsStack from './BillsStack';
 
 const Tab = createBottomTabNavigator();
 
@@ -41,10 +42,10 @@ export default function MainTabs() {
   }, []);
 
   const handleNavigate = useCallback(
-    (route: string) => {
+    (route: string, params?: any) => {
       quickSheetRef.current?.close();
       billsSheetRef.current?.close();
-      setTimeout(() => navigation.navigate(route), 250);
+      setTimeout(() => navigation.navigate(route, params), 250);
     },
     [navigation]
   );
@@ -118,13 +119,7 @@ export default function MainTabs() {
         {/* BILLS */}
         <Tab.Screen
           name="Bills"
-          component={View}
-          listeners={{
-            tabPress: e => {
-              e.preventDefault();
-              openBillsSheet();
-            },
-          }}
+          component={BillsStack}
         />
 
         {/* QUICK ADD FAB */}
@@ -201,12 +196,11 @@ const QuickGrid = React.memo(({ onNavigate }: any) => {
 
   return (
     <BottomSheetView style={styles.sheetContainer}>
-      <Text style={styles.sheetTitle}>Quick Create</Text>
       <View style={styles.grid}>
-        <SheetItem icon="receipt-outline" label="Sale" onPress={() => onNavigate('CreateSale')} />
-        <SheetItem icon="cart-outline" label="Purchase" onPress={() => onNavigate('CreatePurchase')} />
-        <SheetItem icon="person-add-outline" label="Customer" onPress={() => onNavigate('AddCustomer')} />
-        <SheetItem icon="business-outline" label="Supplier" onPress={() => onNavigate('AddSupplier')} />
+        <SheetItem icon="receipt-outline" label="Sale" onPress={() => onNavigate('AddSale')} />
+        <SheetItem icon="cart-outline" label="Purchase" onPress={() => onNavigate('AddPurchase')} />
+        <SheetItem icon="person-add-outline" label="Customer" onPress={() => onNavigate('AddParty', { partyType: 'customer' })} />
+        <SheetItem icon="business-outline" label="Supplier" onPress={() => onNavigate('AddParty', { partyType: 'supplier' })} />
         <SheetItem icon="cube-outline" label="Product" onPress={() => onNavigate('AddProduct')} />
       </View>
     </BottomSheetView>

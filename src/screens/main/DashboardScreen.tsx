@@ -107,11 +107,12 @@ export default function DashboardScreen({ navigation }: any) {
                 </Text>
                 <TouchableOpacity
                   style={styles.inlinePrimaryButton}
-                  onPress={() => navigation.navigate('Sales')}
+                  onPress={() => navigation.navigate('AddSale')}
                 >
                   <Text style={styles.inlinePrimaryText}>
                     Add Sale
                   </Text>
+                  <Ionicons name="add" size={22} color="#fff" />
                 </TouchableOpacity>
               </View>
             )}
@@ -313,9 +314,13 @@ const styles = StyleSheet.create({
   inlinePrimaryButton: {
     marginTop: 16,
     backgroundColor: colors.primary,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
   },
 
   inlinePrimaryText: {
